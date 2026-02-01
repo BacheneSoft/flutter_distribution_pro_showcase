@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "252451569953",
+    "firebase_url": "https://bsoftdist-e0312-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "bsoftdist-e0312",
+    "storage_bucket": "bsoftdist-e0312.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:252451569953:android:d3998ea9a693aa33b5be60",
+        "android_client_info": {
+          "package_name": "com.example.bsoftdist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB15ysxXAypm1yQNjMrPVZ3GjQXS1audXM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

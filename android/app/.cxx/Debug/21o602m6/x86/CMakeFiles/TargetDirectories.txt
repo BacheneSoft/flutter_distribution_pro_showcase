@@ -1,0 +1,2 @@
+C:/Users/eLiTeBooK/Documents/PythonPrograms/App_Bsoft/flutter_application_1/bsoft_app/android/app/.cxx/Debug/21o602m6/x86/CMakeFiles/edit_cache.dir
+C:/Users/eLiTeBooK/Documents/PythonPrograms/App_Bsoft/flutter_application_1/bsoft_app/android/app/.cxx/Debug/21o602m6/x86/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,2 @@
+C:/Users/eLiTeBooK/Documents/PythonPrograms/App_Bsoft/bsoft_app_dist/android/app/.cxx/RelWithDebInfo/191g1d5v/x86/CMakeFiles/edit_cache.dir
+C:/Users/eLiTeBooK/Documents/PythonPrograms/App_Bsoft/bsoft_app_dist/android/app/.cxx/RelWithDebInfo/191g1d5v/x86/CMakeFiles/rebuild_cache.dir
