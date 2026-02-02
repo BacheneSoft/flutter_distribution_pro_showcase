@@ -304,7 +304,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
   // }
 
 
-  Future<void> _exportToXML() async {
+    Future<void> _exportToXML() async {
     try {
       final now = DateTime.now();
       final dateStr = DateFormat('yyyy-MM-dd').format(now);
@@ -312,6 +312,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       // Fetch flat sales data
       final salesData = await _db.getSalesExportData(dateStr);
       final paymentsData = await _db.getPaymentsExportData(dateStr);
+      // Fetch all items for "rest of items" tracking
+      final allItems = await _db.getItems();
 
       // Build XML content
       StringBuffer xmlBuffer = StringBuffer();
@@ -348,6 +350,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       xmlBuffer.writeln('<FIELD FieldName="SOLDE_INIT" DisplayLabel="SOLDE_INIT" FieldType="Float" FieldClass="TField"/>');
       xmlBuffer.writeln('<FIELD FieldName="VALIDE" DisplayLabel="VALIDE" FieldType="String" FieldClass="TField"/>');
       xmlBuffer.writeln('<FIELD FieldName="MODE_PAIEMENT" DisplayLabel="MODE_PAIEMENT" FieldType="String" FieldClass="TField"/>');
+      xmlBuffer.writeln('<FIELD FieldName="QUANT_CHARGEE" DisplayLabel="QUANT_CHARGEE" FieldType="Float" FieldClass="TField"/>');
+      xmlBuffer.writeln('<FIELD FieldName="RESTE_VAN" DisplayLabel="RESTE_VAN" FieldType="Float" FieldClass="TField"/>');
       
       xmlBuffer.writeln('</FIELDS>');
       xmlBuffer.writeln('</METADATA>');
@@ -401,7 +405,9 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         xmlBuffer.write('discount="${row['discount'] ?? 0}" ');
         xmlBuffer.write('SOLDE_INIT="${((row['solde_init'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}" ');
         xmlBuffer.write('VALIDE="${row['payment_status'] == 'paid' ? 'oui' : 'non'}" ');
-        xmlBuffer.write('MODE_PAIEMENT="${_escapeXmlAttribute(row['payment_method']?.toString() ?? 'Espece')}"');
+        xmlBuffer.write('MODE_PAIEMENT="${_escapeXmlAttribute(row['payment_method']?.toString() ?? 'Espece')}" ');
+        xmlBuffer.write('QUANT_CHARGEE="${row['quantity_char'] ?? 0}" ');
+        xmlBuffer.write('RESTE_VAN="${row['stock_quantity'] ?? 0}"');
         xmlBuffer.writeln('/>');
         noOrdre++;
       }
@@ -434,8 +440,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         xmlBuffer.write('TIME_P="$timeP" ');
         xmlBuffer.write('TOTAL_AMOUNT="0" ');
         xmlBuffer.write('TOTAL_PAYMENT="0" ');
-        xmlBuffer.write('REGLEMENT="${row['reglement'] ?? 0}" ');
-        xmlBuffer.write('SOLDE="${((row['solde'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}" ');
+        xmlBuffer.write('REGLEMENT="${((row['reglement'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}" ');
+        xmlBuffer.write('SOLDE="0" ');
         xmlBuffer.write('code_article="" ');
         xmlBuffer.write('tax="0" ');
         xmlBuffer.write('cond="0" ');
@@ -446,7 +452,47 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
         xmlBuffer.write('pu_art_gros="0" ');
         xmlBuffer.write('discount="0" ');
         xmlBuffer.write('SOLDE_INIT="${((row['solde_init'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)}" ');
-        xmlBuffer.write('VALIDE="oui"');
+        xmlBuffer.write('VALIDE="oui" ');
+        xmlBuffer.write('MODE_PAIEMENT="${_escapeXmlAttribute(row['method']?.toString() ?? 'Espece')}" ');
+        xmlBuffer.write('QUANT_CHARGEE="0" ');
+        xmlBuffer.write('RESTE_VAN="0"');
+        xmlBuffer.writeln('/>');
+        noOrdre++;
+      }
+
+      // 3. Export Inventory Status (All Items)
+      // This includes items not sold today as well
+      final todayStr = DateFormat('dd-MM-yyyy').format(DateTime.now());
+      for (var item in allItems) {
+        xmlBuffer.write('<ROW NO_ORDRE="$noOrdre" ');
+        xmlBuffer.write('nom_cl="INVENTAIRE" ');
+        xmlBuffer.write('code_cl="0" ');
+        xmlBuffer.write('ADRESSE="" ');
+        xmlBuffer.write('TELEPHONE="" ');
+        xmlBuffer.write('TYPE="" ');
+        xmlBuffer.write('id_sale="0" ');
+        xmlBuffer.write('id_user="$vanName" ');
+        xmlBuffer.write('NUM_BL="${_escapeXmlAttribute(item['num_bl']?.toString() ?? '')}" ');
+        xmlBuffer.write('DATE_P="$todayStr" ');
+        xmlBuffer.write('TIME_P="" ');
+        xmlBuffer.write('TOTAL_AMOUNT="0" ');
+        xmlBuffer.write('TOTAL_PAYMENT="0" ');
+        xmlBuffer.write('REGLEMENT="0" ');
+        xmlBuffer.write('SOLDE="0" ');
+        xmlBuffer.write('code_article="${_escapeXmlAttribute(item['code_article']?.toString() ?? '')}" ');
+        xmlBuffer.write('tax="0" ');
+        xmlBuffer.write('cond="${item['cond'] ?? 0}" ');
+        xmlBuffer.write('designation="${_escapeXmlAttribute(item['item_name']?.toString() ?? '')}" ');
+        xmlBuffer.write('nbre_colis="0" ');
+        xmlBuffer.write('stock_quantity="0" ');
+        xmlBuffer.write('unit_price="${item['unit_price'] ?? 0}" ');
+        xmlBuffer.write('pu_art_gros="${item['pu_art_gros'] ?? 0}" ');
+        xmlBuffer.write('discount="0" ');
+        xmlBuffer.write('SOLDE_INIT="0" ');
+        xmlBuffer.write('VALIDE="oui" ');
+        xmlBuffer.write('MODE_PAIEMENT="Inventaire" ');
+        xmlBuffer.write('QUANT_CHARGEE="${item['quantity_char'] ?? 0}" ');
+        xmlBuffer.write('RESTE_VAN="${item['stock_quantity'] ?? 0}"');
         xmlBuffer.writeln('/>');
         noOrdre++;
       }

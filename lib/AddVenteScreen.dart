@@ -53,6 +53,7 @@ class _AddVenteScreenState extends State<AddVenteScreen> {
     setState(() {
       selectedDepotMarchandises = items.map((item) {
         return {
+          'id_item': item['id_item'],
           'COD_ARTICLE': item['id_item']?.toString() ?? '',
           'DESIGNATION': item['item_name'] ?? '',
           'PU_ART': item['unit_price'] ?? 0.0,

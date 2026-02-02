@@ -32,7 +32,7 @@ android {
         compileSdkVersion 35 // Use the latest SDK version (currently 34)
         minSdkVersion 23 // Updated to 23
         targetSdkVersion 35 // Ensure this matches your target SDK version
-        versionCode 1
+        versionCode 4
         versionName "1.0"
     }
 

@@ -200,7 +200,7 @@ class DatabaseHelper {
         tax REAL DEFAULT 0.00,
         notes TEXT,
         FOREIGN KEY (id_client) REFERENCES clients(id_client),
-        FOREIGN KEY (id_user) REFERENCES user(id_user)
+        FOREIGN KEY (id_user) REFERENCES users(id_user)
       )
     ''');
 
@@ -800,7 +800,6 @@ class DatabaseHelper {
         c.type_client,
         c.commune,
         c.cite,
-        c.cite,
         c.solde,
         c.solde_init,
         s.id_sale, 
@@ -817,6 +816,9 @@ class DatabaseHelper {
         si.quantity as quantity_sold, 
         si.unit_price, 
         i.pu_art_gros,
+        i.stock_quantity,
+        i.quantity_char,
+        i.quantity_sold,
         s.payment_amount,
         s.payment_method
       FROM sold s

@@ -830,7 +830,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     final TextEditingController _libelleController = TextEditingController();
     final TextEditingController _referenceController = TextEditingController();
     // Local variable for payment mode (default to "espèce").
-    String paymentMode = 'espèce'; // or "carte"
+    String paymentMode = 'espece'; // or "carte"
 
     showDialog(
       context: context,
@@ -880,7 +880,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                       value: paymentMode,
                       items: [
                         DropdownMenuItem(
-                          value: 'espèce',
+                          value: 'espece',
                           child: Text(
                             'Espèce',
                             style: const TextStyle(
@@ -902,7 +902,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                       ],
                       onChanged: (value) {
                         localSetState(() {
-                          paymentMode = value ?? 'espèce';
+                          paymentMode = value ?? 'espece';
                         });
                       },
                       decoration: InputDecoration(
@@ -1247,6 +1247,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     setState(() {
       selectedDepotMarchandises = items.map((item) {
         return {
+          'id_item': item['id_item'],
           'COD_ARTICLE': item['id_item']?.toString() ?? '',
           'DESIGNATION': item['item_name'] ?? '',
           'PU_ART': item['unit_price'] ?? 0.0,
@@ -1700,6 +1701,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                         if (!isCarton) {
                           // Unité mode: use QUANT_LIVRE.
                           selectedItems.add({
+                            'id_item': article['id_item'],
                             'COD_ARTICLE': article['COD_ARTICLE'] ?? article['code_article'],
                             'DESIGNATION': designation,
                             'price_type': clientType,
@@ -1712,6 +1714,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                         } else {
                           // Carton mode: calculate price multiplied by 'COND'.
                           selectedItems.add({
+                            'id_item': article['id_item'],
                             'COD_ARTICLE': article['COD_ARTICLE'] ?? article['code_article'],
                             'DESIGNATION': designation,
                             'price_type': clientType,

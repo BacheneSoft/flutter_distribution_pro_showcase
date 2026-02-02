@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'database_helper.dart';
 import 'splashcreen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 // Log out function
 void _logout(BuildContext context) async {
@@ -32,10 +33,20 @@ class HomeButtons extends StatefulWidget {
 class _HomeButtonsState extends State<HomeButtons> {
   bool isLoggedIn = false; // Add this to track login state
   String? userId;
+  String appVersion = '';
   @override
   void initState() {
     super.initState();
     checkLoginStatus(); // Ensure we load the cached user and routes
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    });
   }
 
   // Check if the user is logged in
@@ -168,42 +179,59 @@ class _HomeButtonsState extends State<HomeButtons> {
     return Drawer(
       child: Container(
         color: Colors.grey[200], // Change the background color here
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(
-                    0xFF141E46), // You can keep the header color different if needed
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Color(0xFF141E46),
+                    ),
+                    child: Text(
+                      'Profile',
+                      style: TextStyle(
+                        color: Colors.grey[200],
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.home),
+                    title: Text('Home'),
+                    onTap: () {
+                      Navigator.pop(context); // close drawer
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.settings),
+                    title: Text('Settings'),
+                    onTap: () {
+                      Navigator.pop(context); // close drawer
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.exit_to_app),
+                    title: Text('Log out'),
+                    onTap: () {
+                      _logout(context); // Log out functionality
+                    },
+                  ),
+                ],
               ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               child: Text(
-                'Profile',
-                style: TextStyle(
-                  color: Colors.grey[200],
-                  fontSize: 24,
+                'Version: $appVersion',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF141E46),
                 ),
+                textAlign: TextAlign.center,
               ),
-            ),
-            ListTile(
-              leading: Icon(Icons.home),
-              title: Text('Home'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              onTap: () {
-                Navigator.pop(context); // close drawer
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.exit_to_app),
-              title: Text('Log out'),
-              onTap: () {
-                _logout(context); // Log out functionality
-              },
             ),
           ],
         ),

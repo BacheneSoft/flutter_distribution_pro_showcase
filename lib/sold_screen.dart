@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'clotures_history_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'settings_screen.dart';
 
 class SoldScreen extends StatefulWidget {
@@ -25,11 +26,21 @@ class _SoldScreenState extends State<SoldScreen> {
   double encaissement = 0.0;
   double chiffreAffaire = 0.0;
   String vanName = '';
+  String appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadEncaissement();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    });
   }
 
   Future<void> _loadEncaissement() async {
@@ -249,30 +260,49 @@ class _SoldScreenState extends State<SoldScreen> {
         iconTheme: const IconThemeData(color: Color(0xFF19264C)),
       ),
       drawer: Drawer(
-        child: ListView(padding: EdgeInsets.zero, children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF19264C)),
-            child: Text('Profile',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontFamily: 'Odin Rounded')),
-          ),
-          _buildDrawerItem(Icons.home, 'Home'),
-          _buildDrawerItem(Icons.file_download, 'Exporter',
-              action: _handleExport),
-          _buildDrawerItem(Icons.file_upload, 'Importer',
-              action: _handleImport),
-          _buildDrawerItem(Icons.history, 'Historique Clôtures',
-              action: _showCloturesHistory),
-          _buildDrawerItem(Icons.settings, 'Paramètres',
-              action: () {
-                Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-              }),
-          _buildDrawerItem(Icons.exit_to_app, 'Deconnecté',
-              action: _handleLogout),
-        ]),
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(padding: EdgeInsets.zero, children: [
+                const DrawerHeader(
+                  decoration: BoxDecoration(color: Color(0xFF19264C)),
+                  child: Text('Profile',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontFamily: 'Odin Rounded')),
+                ),
+                _buildDrawerItem(Icons.home, 'Home'),
+                _buildDrawerItem(Icons.file_download, 'Exporter',
+                    action: _handleExport),
+                _buildDrawerItem(Icons.file_upload, 'Importer',
+                    action: _handleImport),
+                _buildDrawerItem(Icons.history, 'Historique Clôtures',
+                    action: _showCloturesHistory),
+                _buildDrawerItem(Icons.settings, 'Paramètres',
+                    action: () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                    }),
+                _buildDrawerItem(Icons.exit_to_app, 'Deconnecté',
+                    action: _handleLogout),
+              ]),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Text(
+                'Version: $appVersion',
+                style: const TextStyle(
+                  fontFamily: 'Odin Rounded',
+                  fontSize: 14,
+                  color: Color(0xFF19264C),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
       body: Container(
         color: const Color(0xFFFAFAFF),
