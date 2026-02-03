@@ -71,6 +71,8 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   // Toggle between ventes and reglements view
   bool showReglements = false;
 
+  bool _isPrintingUI = false;
+
   @override
   void initState() {
     super.initState();
@@ -115,34 +117,57 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
   }
 
   void _handleDirectPrint(Map<dynamic, dynamic> data, bool isSale) async {
+    if (_isPrintingUI) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impression en cours...')),
+      );
+      return;
+    }
+
     bool connected = await _printHelper.isConnected();
     if (!connected) {
       _showPrinterSelectionDialog((device) async {
-        bool result = await _printHelper.connect(device);
-        if (result) {
-          _doPrint(data, isSale);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Échec de la connexion à l\'imprimante.')),
-          );
+        setState(() => _isPrintingUI = true);
+        try {
+          bool result = await _printHelper.connect(device);
+          if (result) {
+            await _doPrint(data, isSale);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Échec de la connexion à l\'imprimante.')),
+            );
+          }
+        } finally {
+          setState(() => _isPrintingUI = false);
         }
       });
     } else {
-      _doPrint(data, isSale);
+      setState(() => _isPrintingUI = true);
+      try {
+        await _doPrint(data, isSale);
+      } finally {
+        setState(() => _isPrintingUI = false);
+      }
     }
   }
 
-  void _doPrint(Map<dynamic, dynamic> data, bool isSale) async {
-    if (isSale) {
-      int saleId = int.tryParse(data['idVente']?.toString() ?? 
-                            data['id_sale']?.toString() ?? '0') ?? 0;
-      List<Map<String, dynamic>> items = [];
-      if (saleId > 0) {
-        items = await DatabaseHelper().getSaleItems(saleId);
+  Future<void> _doPrint(Map<dynamic, dynamic> data, bool isSale) async {
+    try {
+      if (isSale) {
+        int saleId = int.tryParse(data['idVente']?.toString() ?? 
+                              data['id_sale']?.toString() ?? '0') ?? 0;
+        List<Map<String, dynamic>> items = [];
+        if (saleId > 0) {
+          items = await DatabaseHelper().getSaleItems(saleId);
+        }
+        await _printHelper.printSale(data, clientData, items);
+      } else {
+        await _printHelper.printReglement(data, clientData);
       }
-      await _printHelper.printSale(data, clientData, items);
-    } else {
-      await _printHelper.printReglement(data, clientData);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur d\'impression: $e')),
+      );
     }
   }
 

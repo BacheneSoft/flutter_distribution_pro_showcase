@@ -12,8 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'bluetooth_print_helper.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
-class VentePdfScreen extends StatelessWidget {
-
+class VentePdfScreen extends StatefulWidget {
   final Map<String, dynamic> vente;
   final Map<dynamic, dynamic> clientData;
 
@@ -22,6 +21,13 @@ class VentePdfScreen extends StatelessWidget {
     required this.vente,
     required this.clientData,
   }) : super(key: key);
+
+  @override
+  _VentePdfScreenState createState() => _VentePdfScreenState();
+}
+
+class _VentePdfScreenState extends State<VentePdfScreen> {
+  bool _isPrintingUI = false;
 
   Future<void> _generateAndShareCSV(BuildContext context) async {
     List<List<dynamic>> rows = [];
@@ -44,24 +50,24 @@ class VentePdfScreen extends StatelessWidget {
     ]);
 
     // Client Info
-    String clientCode = clientData['CODECLTV']?.toString() ?? '';
-    String clientName = clientData['NOMCLIENT']?.toString() ?? '';
+    String clientCode = widget.clientData['CODECLTV']?.toString() ?? '';
+    String clientName = widget.clientData['NOMCLIENT']?.toString() ?? '';
 
     // Sale Info
-    String saleIdStr = vente['idVente']?.toString() ?? 
-                       vente['id_sale']?.toString() ?? '';
+    String saleIdStr = widget.vente['idVente']?.toString() ?? 
+                       widget.vente['id_sale']?.toString() ?? '';
     int? sId = int.tryParse(saleIdStr);
     
-    String dateVente = vente['dateVente']?.toString() ?? vente['sale_date']?.toString() ?? '';
-    double totalAmount = (vente['montant'] as num?)?.toDouble() ?? 
-                         (vente['total_amount'] as num?)?.toDouble() ?? 0.0;
-    double montantPaye = (vente['montantPaye'] as num?)?.toDouble() ?? 
-                         (vente['payment_amount'] as num?)?.toDouble() ?? 0.0;
+    String dateVente = widget.vente['dateVente']?.toString() ?? widget.vente['sale_date']?.toString() ?? '';
+    double totalAmount = (widget.vente['montant'] as num?)?.toDouble() ?? 
+                         (widget.vente['total_amount'] as num?)?.toDouble() ?? 0.0;
+    double montantPaye = (widget.vente['montantPaye'] as num?)?.toDouble() ?? 
+                         (widget.vente['payment_amount'] as num?)?.toDouble() ?? 0.0;
     double resteAPayer = totalAmount - montantPaye;
-    String status = (vente['valide'] == true || vente['payment_status'] == 'paid') ? "Payé" : "Non Payé";
+    String status = (widget.vente['valide'] == true || widget.vente['payment_status'] == 'paid') ? "Payé" : "Non Payé";
 
     // Items
-    List<dynamic> items = vente['items'] ?? vente['selectedItems'] ?? [];
+    List<dynamic> items = widget.vente['items'] ?? widget.vente['selectedItems'] ?? [];
     if (items.isEmpty && sId != null && sId > 0) {
        final db = DatabaseHelper();
        try {
@@ -149,13 +155,22 @@ class VentePdfScreen extends StatelessWidget {
 
       await Share.shareXFiles([XFile(path)], text: 'Vente CSV');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Erreur lors de l\'export CSV: $e'),
-      ));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Erreur lors de l\'export CSV: $e'),
+        ));
+      }
     }
   }
 
   void _handleDirectPrint(BuildContext context) async {
+    if (_isPrintingUI) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impression en cours...')),
+      );
+      return;
+    }
+
     final BluetoothPrintHelper printHelper = BluetoothPrintHelper();
     bool connected = await printHelper.isConnected();
     
@@ -178,13 +193,18 @@ class VentePdfScreen extends StatelessWidget {
                         subtitle: Text(devices[index].address ?? ''),
                         onTap: () async {
                           Navigator.pop(context);
-                          bool result = await printHelper.connect(devices[index]);
-                          if (result) {
-                            _doPrint(context, printHelper);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Échec de la connexion.')),
-                            );
+                          setState(() => _isPrintingUI = true);
+                          try {
+                            bool result = await printHelper.connect(devices[index]);
+                            if (result) {
+                              await _doPrint(context, printHelper);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Échec de la connexion.')),
+                              );
+                            }
+                          } finally {
+                            setState(() => _isPrintingUI = false);
                           }
                         },
                       );
@@ -194,30 +214,40 @@ class VentePdfScreen extends StatelessWidget {
         ),
       );
     } else {
-      _doPrint(context, printHelper);
+      setState(() => _isPrintingUI = true);
+      try {
+        await _doPrint(context, printHelper);
+      } finally {
+        setState(() => _isPrintingUI = false);
+      }
     }
   }
 
-  void _doPrint(BuildContext context, BluetoothPrintHelper printHelper) async {
-    int saleId = int.tryParse(vente['idVente']?.toString() ?? 
-                          vente['id_sale']?.toString() ?? '0') ?? 0;
-    List<Map<String, dynamic>> items = [];
-    if (saleId > 0) {
-      items = await DatabaseHelper().getSaleItems(saleId);
-    }
-    // Fallback to internal items if database returned nothing
-    if (items.isEmpty) {
-      if (vente['items'] != null) {
-        items = List<Map<String, dynamic>>.from(vente['items'] as List);
-      } else if (vente['selectedItems'] != null) {
-        items = List<Map<String, dynamic>>.from(vente['selectedItems'] as List);
+  Future<void> _doPrint(BuildContext context, BluetoothPrintHelper printHelper) async {
+    try {
+      int saleId = int.tryParse(widget.vente['idVente']?.toString() ?? 
+                            widget.vente['id_sale']?.toString() ?? '0') ?? 0;
+      List<Map<String, dynamic>> items = [];
+      if (saleId > 0) {
+        items = await DatabaseHelper().getSaleItems(saleId);
       }
+      // Fallback to internal items if database returned nothing
+      if (items.isEmpty) {
+        if (widget.vente['items'] != null) {
+          items = List<Map<String, dynamic>>.from(widget.vente['items'] as List);
+        } else if (widget.vente['selectedItems'] != null) {
+          items = List<Map<String, dynamic>>.from(widget.vente['selectedItems'] as List);
+        }
+      }
+      await printHelper.printSale(widget.vente, widget.clientData, items);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur d\'impression: $e')),
+      );
     }
-    await printHelper.printSale(vente, clientData, items);
   }
 
   @override
-
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -227,7 +257,7 @@ class VentePdfScreen extends StatelessWidget {
       ),
       body: PdfPreview(
         allowPrinting: false,
-        build: (format) => generateVentePdfData(format, vente),
+        build: (format) => generateVentePdfData(format, widget.vente),
         pageFormats: const {
           'A4': PdfPageFormat.a4,
           'A5': PdfPageFormat.a5,
@@ -237,15 +267,15 @@ class VentePdfScreen extends StatelessWidget {
         actions: [
           PdfPreviewAction(
             icon: const Icon(Icons.print),
-            onPressed: (context, build, pageFormat) => _handleDirectPrint(context),
+            onPressed: _isPrintingUI ? null : (context, build, pageFormat) => _handleDirectPrint(context),
           ),
           PdfPreviewAction(
             icon: const Icon(Icons.file_download),
             onPressed: (context, build, pageFormat) => _generateAndShareCSV(context),
           ),
-
         ],
       ),
     );
   }
 }
+

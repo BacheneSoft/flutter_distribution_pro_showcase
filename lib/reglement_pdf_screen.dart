@@ -12,7 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'bluetooth_print_helper.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
-class ReglementPdfScreen extends StatelessWidget {
+class ReglementPdfScreen extends StatefulWidget {
   final Map<String, dynamic> reglement;
   final Map<dynamic, dynamic> clientData;
 
@@ -22,12 +22,27 @@ class ReglementPdfScreen extends StatelessWidget {
     required this.clientData,
   }) : super(key: key);
 
+  @override
+  _ReglementPdfScreenState createState() => _ReglementPdfScreenState();
+}
+
+class _ReglementPdfScreenState extends State<ReglementPdfScreen> {
+  bool _isPrintingUI = false;
+
   void _handleDirectPrint(BuildContext context) async {
+    if (_isPrintingUI) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Impression en cours...')),
+      );
+      return;
+    }
+
     final BluetoothPrintHelper printHelper = BluetoothPrintHelper();
     bool connected = await printHelper.isConnected();
     
     if (!connected) {
       List<BluetoothDevice> devices = await printHelper.getDevices();
+      if (!mounted) return;
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -45,13 +60,18 @@ class ReglementPdfScreen extends StatelessWidget {
                         subtitle: Text(devices[index].address ?? ''),
                         onTap: () async {
                           Navigator.pop(context);
-                          bool result = await printHelper.connect(devices[index]);
-                          if (result) {
-                            _doPrint(context, printHelper);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Échec de la connexion.')),
-                            );
+                          setState(() => _isPrintingUI = true);
+                          try {
+                            bool result = await printHelper.connect(devices[index]);
+                            if (result) {
+                              await _doPrint(context, printHelper);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Échec de la connexion.')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isPrintingUI = false);
                           }
                         },
                       );
@@ -61,12 +81,25 @@ class ReglementPdfScreen extends StatelessWidget {
         ),
       );
     } else {
-      _doPrint(context, printHelper);
+      setState(() => _isPrintingUI = true);
+      try {
+        await _doPrint(context, printHelper);
+      } finally {
+        if (mounted) setState(() => _isPrintingUI = false);
+      }
     }
   }
 
-  void _doPrint(BuildContext context, BluetoothPrintHelper printHelper) async {
-    await printHelper.printReglement(reglement, clientData);
+  Future<void> _doPrint(BuildContext context, BluetoothPrintHelper printHelper) async {
+    try {
+      await printHelper.printReglement(widget.reglement, widget.clientData);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur d\'impression: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -78,7 +111,7 @@ class ReglementPdfScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: PdfPreview(
-        build: (format) => generateReglementPdfData(format, reglement),
+        build: (format) => generateReglementPdfData(format, widget.reglement),
         pageFormats: const {
           'A4': PdfPageFormat.a4,
           'A5': PdfPageFormat.a5,
@@ -87,10 +120,11 @@ class ReglementPdfScreen extends StatelessWidget {
         actions: [
           PdfPreviewAction(
             icon: const Icon(Icons.print),
-            onPressed: (context, build, pageFormat) => _handleDirectPrint(context),
+            onPressed: _isPrintingUI ? null : (context, build, pageFormat) => _handleDirectPrint(context),
           ),
         ],
       ),
     );
   }
 }
+
