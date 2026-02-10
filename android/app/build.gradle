@@ -26,14 +26,14 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.bsoftdist"
+        applicationId = "com.example.bsoftdist.showcase"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         compileSdkVersion 35 // Use the latest SDK version (currently 34)
         minSdkVersion 23 // Updated to 23
         targetSdkVersion 35 // Ensure this matches your target SDK version
-        versionCode 5
-        versionName "1.2.1"
+        versionCode 7
+        versionName "1.2.3"
     }
 
     buildTypes {
@@ -48,9 +48,9 @@ android {
 }
 
 dependencies {
-    implementation platform('com.google.firebase:firebase-bom:33.2.0')  // 👈 Updated BOM
-    implementation 'com.google.firebase:firebase-analytics'
+//    implementation platform('com.google.firebase:firebase-bom:33.2.0')
+//    implementation 'com.google.firebase:firebase-analytics'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"  // 👈 Add this
 }
 // Add this line at the BOTTOM
-apply plugin: 'com.google.gms.google-services'
+// apply plugin: 'com.google.gms.google-services'

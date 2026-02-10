@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'activation_screen.dart';
-import 'sold_screen.dart';
+import 'package:bsoft_app_dist/features/auth/activation_screen.dart';
+import 'package:bsoft_app_dist/features/home/sold_screen.dart';
+import 'package:bsoft_app_dist/features/auth/login_screen.dart';
+
+
 
 // ▶ OPTIMIZED: Declare globals without initializing at top‐level.
 String? vanId;
@@ -12,9 +15,19 @@ Future<void> main() async {
 
   // Check for stored user ID
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? storedUserId = prefs.getString('userId');
-  if (storedUserId != null) {
-    vanId = storedUserId;
+  bool activated = prefs.getBool('is_activated') ?? false;
+  
+  if (activated) {
+    String? storedUserId = prefs.getString('userId');
+    if (storedUserId == null) {
+      // If activated but no userId, default to admin
+      await prefs.setString('userId', 'admin');
+      await prefs.setInt('db_id_user', 1);
+      await prefs.setBool('loggedIn', true);
+      vanId = 'admin';
+    } else {
+      vanId = storedUserId;
+    }
   }
 
   runApp(const MyApp());
@@ -54,31 +67,44 @@ class MyApp extends StatelessWidget {
 }
 
 /// This widget listens to the authentication state and returns the
-/// appropriate screen: [LoginScreen] if the user is not signed in, or [HomeButtons] if they are.
+/// appropriate screen: [ActivationScreen] if not activated, otherwise [SoldScreen].
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: _checkLoginStatus(),
+      future: _checkActivationStatus(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
+        
+        // In Demo/Showcase mode, we can auto-activate or show a demo login.
+        // For simplicity, let's allow it to start normally.
         if (snapshot.data == true) {
           return const SoldScreen();
         } else {
+          // You could redirect to a demo-specific welcome screen here
           return const ActivationScreen();
         }
       },
     );
   }
 
-  Future<bool> _checkLoginStatus() async {
+  Future<bool> _checkActivationStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    // Check if activated instead of just logged in
-    return prefs.getBool('is_activated') ?? false;
+    bool activated = prefs.getBool('is_activated') ?? false;
+    
+    if (activated && prefs.getString('userId') == null) {
+      // Ensure we have a default user if activated but userId is missing
+      await prefs.setString('userId', 'admin');
+      await prefs.setInt('db_id_user', 1);
+      await prefs.setBool('loggedIn', true);
+      vanId = 'admin';
+    }
+    
+    return activated;
   }
 }

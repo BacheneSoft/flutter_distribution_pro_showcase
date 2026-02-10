@@ -1,0 +1,4 @@
+﻿error - Target of URI doesn't exist: 'database_helper.dart' - lib\features\stock\stock_decharge_screen.dart:3:8 - uri_does_not_exist
+error - Target of URI doesn't exist: 'pdfgen.dart' - lib\features\stock\stock_decharge_screen.dart:4:8 - uri_does_not_exist
+error - Target of URI doesn't exist: 'database_helper.dart' - lib\features\stock\stock_list_screen.dart:2:8 - uri_does_not_exist
+error - Target of URI doesn't exist: 'userscreen_sells.dart' - lib\features\stock\stock_list_screen.dart:3:8 - uri_does_not_exist
