@@ -16,15 +16,19 @@ This application is built to bridge the gap between warehouses and retail points
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="Screenshots/Home.jpg" width="30%" alt="Home Screen" />
-  <img src="Screenshots/Clients.jpg" width="30%" alt="Client List" />
-  <img src="Screenshots/Stock.jpg" width="30%" alt="Stock Management" />
+  <img src="Screenshots/Home.jpg" width="32%" alt="Home Screen" />
+  <img src="Screenshots/Clients.jpg" width="32%" alt="Client List" />
+  <img src="Screenshots/Client_details.jpg" width="32%" alt="Client Details" />
 </p>
 
 <p align="center">
-  <img src="Screenshots/Add_sell.jpg" width="30%" alt="Add Sale" />
-  <img src="Screenshots/Product_detail.jpg" width="30%" alt="Product Details" />
-  <img src="Screenshots/Settings.jpg" width="30%" alt="Settings" />
+  <img src="Screenshots/Stock.jpg" width="32%" alt="Stock Management" />
+  <img src="Screenshots/Add_sell.jpg" width="32%" alt="Add Sale" />
+  <img src="Screenshots/Product_detail.jpg" width="32%" alt="Product Details" />
+</p>
+
+<p align="center">
+  <img src="Screenshots/Settings.jpg" width="32%" alt="Settings" />
 </p>
 
 ## 🛠️ Architectural Overview
