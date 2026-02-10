@@ -36,19 +36,21 @@ This application is built to bridge the gap between warehouses and retail points
 The project is designed using a clean, modular pattern ensuring enterprise-grade separation of concerns:
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph Presentation
-    UI[Widgets/Screens] --> BL[State Management]
+        UI[Widgets/Screens] --> BL[State Management]
     end
 
     subgraph Domain
-    BL --> UC[Use Cases/Logic]
+        UC[Use Cases/Logic]
     end
 
     subgraph Data
-    UC --> Repo[Repository Interface]
-    Repo --> Mock[Mock Data Source / Local DB]
+        Repo[Repository Interface] --> Mock[Mock Data Source / Local DB]
     end
+
+    BL --> UC
+    UC --> Repo
 ```
 
 - **Features**: Each module (auth, sales, clients) is self-contained with its own UI components and business logic.
