@@ -22,8 +22,8 @@ This application is built to bridge the gap between warehouses and retail points
 </p>
 
 <p align="center">
-  <img src="Screenshots/Add sell.jpg" width="30%" alt="Add Sale" />
-  <img src="Screenshots/Product detail.jpg" width="30%" alt="Product Details" />
+  <img src="Screenshots/Add_sell.jpg" width="30%" alt="Add Sale" />
+  <img src="Screenshots/Product_detail.jpg" width="30%" alt="Product Details" />
   <img src="Screenshots/Settings.jpg" width="30%" alt="Settings" />
 </p>
 
